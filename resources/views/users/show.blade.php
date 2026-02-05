@@ -28,7 +28,7 @@
 
                 <div class="p-6 sm:p-8">
 
-                    <form method="POST" action="{{ route('users.update', $user) }}">
+                    <form method="POST" action="{{ route('users.update', $user->id) }}">
                         @csrf
                         @method('PUT')
 
