@@ -2,12 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserStoreRequest;
 use App\Models\User;
+use App\Repository\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+
+    public function __construct(
+       private UserRepository $userRepository
+    )
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -31,39 +41,12 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(UserStoreRequest $userStoreRequest)
     {
-        $validatedData = $request->validate(
-            [
-                'name'     => 'required|max:255',
-                'email'    => 'required|email|max:255|unique:users',
-                'password' => 'required|min:6|confirmed',
-            ],
-            [
-                // Сообщения для поля name
-                'name.required'    => 'Поле "Имя" обязательно для заполнения.',
-                'name.max'         => 'Имя не может быть длиннее 255 символов.',
-
-                // Сообщения для поля email
-                'email.required'   => 'Поле "Email" обязательно для заполнения.',
-                'email.email'      => 'Введите корректный адрес электронной почты.',
-                'email.max'        => 'Email не может быть длиннее 255 символов.',
-                'email.unique'     => 'Пользователь с таким email уже зарегистрирован.',
-
-                // Сообщения для поля password
-                'password.required'    => 'Поле "Пароль" обязательно для заполнения.',
-                'password.min'         => 'Пароль должен содержать минимум 6 символов.',
-                'password.confirmed'   => 'Пароли не совпадают.',
-            ]
+        return redirect()->route(
+            'users.show',
+            $this->userRepository->store($userStoreRequest)
         );
-
-        $newUser = new User;
-        $newUser->name = $validatedData['name'];
-        $newUser->email = $validatedData['email'];
-        $newUser->password = Hash::make($validatedData['password']);
-        $newUser->save();
-
-        return redirect()->route('users.show', $newUser->id);
     }
 
     /**
@@ -71,9 +54,9 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-       return view('users.show', [
-           'user' => $user,
-       ]);
+        return view('users.show', [
+            'user' => $user,
+        ]);
     }
 
     /**
@@ -87,9 +70,23 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, User $user)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => [
+                'required',
+                'max:255',
+            ],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users')->ignore($user->id),
+            ],
+        ]);
+
+        $user->update($validatedData);
+
+        return redirect()->back()->with('success', 'Пользователь был удачно обновлен!');
     }
 
     /**
