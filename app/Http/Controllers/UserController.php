@@ -3,24 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UserStoreRequest;
+use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use App\Repository\UserRepository;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\RedirectResponse;
 
 class UserController extends Controller
 {
 
     public function __construct(
-       private UserRepository $userRepository
+        private readonly UserRepository $userRepository
     )
     {
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $users = User::query()->paginate(10);
@@ -30,17 +26,11 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('users.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(UserStoreRequest $userStoreRequest)
     {
         return redirect()->route(
@@ -49,9 +39,6 @@ class UserController extends Controller
         );
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(User $user)
     {
         return view('users.show', [
@@ -59,41 +46,29 @@ class UserController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(
+        UserUpdateRequest $userUpdateRequest,
+        User              $user
+    ): RedirectResponse
     {
-        //
+        return redirect()->route(
+            'users.show',
+            $this->userRepository->update($userUpdateRequest, $user))
+            ->with('success', 'Пользователь успешно обновлен!');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, User $user)
+    public function destroy(User $user)
     {
-        $validatedData = $request->validate([
-            'name' => [
-                'required',
-                'max:255',
-            ],
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('users')->ignore($user->id),
-            ],
-        ]);
+        $userRemoveResult = $this->userRepository->destroy($user);
 
-        $user->update($validatedData);
+        if ($userRemoveResult) {
+            return redirect()->
+            back()->
+            with('success', 'Пользователь удален!');
+        }
 
-        return redirect()->back()->with('success', 'Пользователь был удачно обновлен!');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->
+        back()->
+        withErrors('errors', 'Ошибка при удалении!');
     }
 }

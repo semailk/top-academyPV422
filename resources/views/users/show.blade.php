@@ -50,7 +50,7 @@
                                 <div class="flex-shrink-0">
                                     <div class="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600
                                             flex items-center justify-center text-white font-bold text-3xl shadow-md">
-                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                      @if($user->avatar) <img src="{{ asset($user->avatar->path) }}"> @else {{ strtoupper(substr($user->name, 0, 1)) }} @endif
                                     </div>
                                 </div>
                                 <div class="flex-1">

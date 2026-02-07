@@ -29,37 +29,64 @@
 
             <div class="p-6 sm:p-8">
 
-                <form method="POST" action="{{ route('users.store') }}">
+                <form method="POST" action="{{ route('users.store') }}" enctype="multipart/form-data">
                     @csrf
 
                     <div class="space-y-6">
 
                         <!-- Аватар + имя -->
-                        <div class="flex flex-col sm:flex-row sm:items-center gap-6">
+                        <div class="flex flex-col sm:flex-row sm:items-start gap-6">
                             <div class="flex-shrink-0">
                                 <div class="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600
-                                        flex items-center justify-center text-white font-bold text-3xl shadow-md">
-                                    ?
+                                        flex items-center justify-center text-white font-bold text-3xl shadow-md overflow-hidden">
+                                    <img id="avatar-preview" src="" alt="" class="hidden w-full h-full object-cover">
+                                    <span id="avatar-placeholder">?</span>
                                 </div>
                             </div>
-                            <div class="flex-1">
-                                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Имя пользователя <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text"
-                                       name="name"
-                                       id="name"
-                                       value="{{ old('name') }}"
-                                       required
-                                       autocomplete="name"
-                                       class="block w-full rounded-lg border-gray-300 dark:border-gray-600
-                                          dark:bg-gray-700 dark:text-white shadow-sm
-                                          focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2.5
-                                          @error('name') border-red-300 focus:border-red-500 focus:ring-red-500 @enderror">
 
-                                @error('name')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                                @enderror
+                            <div class="flex-1 space-y-4">
+                                <div>
+                                    <label for="avatar" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Аватар (опционально)
+                                    </label>
+                                    <input type="file"
+                                           name="avatar"
+                                           id="avatar"
+                                           accept="image/jpeg,image/png,image/webp,image/gif"
+                                           class="block w-full text-sm text-gray-500 dark:text-gray-400
+                                              file:mr-4 file:py-2 file:px-4
+                                              file:rounded-lg file:border-0
+                                              file:text-sm file:font-medium
+                                              file:bg-indigo-50 file:text-indigo-700
+                                              hover:file:bg-indigo-100
+                                              dark:file:bg-indigo-900/30 dark:file:text-indigo-400
+                                              dark:hover:file:bg-indigo-900/50
+                                              cursor-pointer">
+
+                                    @error('avatar')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Имя пользователя <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text"
+                                           name="name"
+                                           id="name"
+                                           value="{{ old('name') }}"
+                                           required
+                                           autocomplete="name"
+                                           class="block w-full rounded-lg border-gray-300 dark:border-gray-600
+                                              dark:bg-gray-700 dark:text-white shadow-sm
+                                              focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-4 py-2.5
+                                              @error('name') border-red-300 focus:border-red-500 focus:ring-red-500 @enderror">
+
+                                    @error('name')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
 
@@ -144,4 +171,28 @@
         </div>
 
     </div>
+
+    <!-- Превью аватарки -->
+    <script>
+        document.getElementById('avatar').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('avatar-preview');
+            const placeholder = document.getElementById('avatar-placeholder');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = '';
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        });
+    </script>
+
 @endsection
