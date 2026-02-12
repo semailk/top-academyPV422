@@ -11,6 +11,9 @@ return new class extends Migration
         Schema::create('phones', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
+            $table->foreignId('phone_brand_id')
+                ->references('id')
+                ->on('phone_brands');
             $table->string('number')->unique();
             $table->timestamps();
         });

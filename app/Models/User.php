@@ -4,15 +4,20 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 /**
  * @property string $name
  * @property string $email
  * @property string $password
+ * @property string $slug
  * @property integer $id
+ * @property integer $age
+ * @property boolean $active
  */
 class User extends Authenticatable
 {
@@ -28,6 +33,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'active',
+        'age',
+        'slug'
     ];
 
     /**
@@ -62,4 +70,15 @@ class User extends Authenticatable
     {
         return $this->hasOne(Avatar::class);
     }
+
+    //Акцессор
+//    public function getNameAttribute(): string
+//    {
+//        return Str::upper($this->attributes['name']);
+//    }
+
+//    public function setNameAttribute(string $name): void
+//    {
+//        $this->attributes['name'] = Str::upper($name);
+//    }
 }

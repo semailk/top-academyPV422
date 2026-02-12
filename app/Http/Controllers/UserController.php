@@ -2,27 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Filters\UserFilters;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use App\Repository\UserRepository;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
+use function Laravel\Prompts\select;
 
 class UserController extends Controller
 {
 
     public function __construct(
-        private readonly UserRepository $userRepository
+        private readonly UserRepository $userRepository,
+        private readonly UserFilters    $userFilters
     )
     {
     }
 
-    public function index()
+    public function index(Request $request): View
     {
-        $users = User::query()->paginate(10);
+        $query = User::query()->with('phones.phoneBrand');
 
         return view('users.index', [
-            'users' => $users,
+            'users' => $this->userFilters
+                ->apply($request, $query)
+                ->paginate(10)
+                ->withQueryString(),
         ]);
     }
 
@@ -70,5 +79,12 @@ class UserController extends Controller
         return redirect()->
         back()->
         withErrors('errors', 'Ошибка при удалении!');
+    }
+
+    public function edit(string $slug)
+    {
+        return view('users.show', [
+            'user' => User::query()->where('slug', $slug)->first(),
+        ]);
     }
 }

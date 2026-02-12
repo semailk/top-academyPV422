@@ -1,12 +1,21 @@
 <?php
 
 use App\Http\Controllers\UserController;
-use App\Http\Middleware\RequestMiddleware;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 })->name('welcome');
 
-Route::middleware(RequestMiddleware::class)
-    ->resource('users', UserController::class);
+//Route::middleware('auth')
+//    ->resource('users', UserController::class);
+//
+
+
+Route::resource('users', UserController::class)->except('edit');
+Route::get('users/{slug}/edit', [UserController::class, 'edit'])->name('users.edit');
+
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
