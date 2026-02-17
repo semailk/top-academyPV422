@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filters;
+namespace App\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
-class UserFilters
+trait Filters
 {
-    public function apply(Request $request, Builder $query): Builder
+    public function scopeApply(Builder $query, Request $request): Builder
     {
         if ($request->has('name') && $request->get('name') != null) {
             $query->where('name', 'like', '%' . $request->get('name') . '%');

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Traits\Filters;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -22,7 +24,7 @@ use Illuminate\Support\Str;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, Filters;
 
     /**
      * The attributes that are mass assignable.
@@ -77,8 +79,13 @@ class User extends Authenticatable
 //        return Str::upper($this->attributes['name']);
 //    }
 
-//    public function setNameAttribute(string $name): void
+//    public function setSlugAttribute(string $name): void
 //    {
 //        $this->attributes['name'] = Str::upper($name);
 //    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', true);
+    }
 }
