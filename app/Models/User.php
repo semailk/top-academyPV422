@@ -6,6 +6,8 @@ namespace App\Models;
 use App\Traits\Filters;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -20,6 +22,7 @@ use Illuminate\Support\Str;
  * @property integer $id
  * @property integer $age
  * @property boolean $active
+ * @property integer $role_id
  */
 class User extends Authenticatable
 {
@@ -37,7 +40,8 @@ class User extends Authenticatable
         'password',
         'active',
         'age',
-        'slug'
+        'slug',
+        'role_id',
     ];
 
     /**
@@ -84,8 +88,18 @@ class User extends Authenticatable
 //        $this->attributes['name'] = Str::upper($name);
 //    }
 
+    public function musics(): BelongsToMany
+    {
+        return $this->belongsToMany(Music::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('active', true);
+    }
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
     }
 }
