@@ -6,7 +6,7 @@
 
     <div class="container mx-auto px-4 py-8">
 
-        <h1 class="text-3xl font-bold mb-8">Все треки</h1>
+        <h1 class="text-3xl font-bold mb-8">{{ $pageTitle }}</h1>
 
         @if ($tracks->isEmpty())
             <p class="text-gray-500 text-center py-12">Пока нет опубликованных треков...</p>
@@ -39,6 +39,11 @@
 
                         <!-- Информация -->
                         <div class="p-4">
+                              <span
+                                  class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-indigo-500/20 to-purple-500/20 text-indigo-700 dark:from-indigo-400/30 dark:to-purple-400/30 dark:text-indigo-300 border border-indigo-500/30 dark:border-indigo-400/40 backdrop-blur-sm">
+                            {{ $track->genre }}
+                        </span>
+
                             <h3 class="font-semibold text-lg mb-1 line-clamp-1">
                                 {{ $track->title }}
                             </h3>
@@ -47,17 +52,22 @@
                                 {{ implode(', ', $track->artists) }}
                             </p>
 
+
                             <div class="flex items-center justify-between text-sm text-gray-500">
                                 <span>Прослушиваний: {{ number_format($track->plays) }}</span>
                                 <span>{{ $track->release_date }}</span>
                             </div>
 
-                            <div class="mt-3">
-                                <audio controls class="w-full h-10">
-                                    <source src="{{ asset($track->file_path) }}" type="audio/mpeg">
-                                    Ваш браузер не поддерживает аудио.
-                                </audio>
-                            </div>
+                            <audio
+                                controls
+                                class="w-full h-10 mt-4"
+                                data-track-id="{{ $track->id }}"
+                                data-listened="false"
+                            >
+                                <source src="{{ asset($track->file_path) }}" type="audio/mpeg">
+                                Ваш браузер не поддерживает аудио.
+                            </audio>
+
 
                             <!-- Кнопка "Добавить в избранное / плейлист" -->
                             <div class="mt-3 flex justify-end">
@@ -70,7 +80,8 @@
                                             <svg class="w-7 h-7 text-red-500"
                                                  fill="currentColor"
                                                  viewBox="0 0 24 24">
-                                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                                <path
+                                                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                                             </svg>
                                         </button>
                                     @else
@@ -105,4 +116,90 @@
 
     </div>
 
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Пороги, которые будем отправлять (можно менять)
+            const THRESHOLDS = [1, 10, 25, 50, 75, 90, 100];
+
+            // Отслеживаем все аудио на странице
+            document.querySelectorAll('audio[data-track-id]').forEach(audio => {
+
+                const trackId = audio.dataset.trackId;
+                let reported = new Set();           // уже отправленные пороги для этого трека
+                let lastKnownPercent = 0;
+
+                // Вспомогательная функция отправки
+                function reportProgress(percent, isFinal = false) {
+                    if (reported.has(percent)) return;
+
+                    fetch("{{ route('music.track.listen_progress') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                        },
+                        body: JSON.stringify({
+                            track_id: trackId,
+                            percent: percent,
+                            current_time: Math.round(audio.currentTime),
+                            duration: Math.round(audio.duration || 0),
+                            completed: isFinal || percent >= 95,
+                            timestamp: new Date().toISOString()
+                        })
+                    })
+                        .then(() => {
+                            reported.add(percent);
+                        })
+                        .catch(err => {
+                            console.warn(`Ошибка отправки прогресса трека ${trackId}`, err);
+                        });
+                }
+
+                // Основное событие — обновление времени
+                audio.addEventListener('timeupdate', () => {
+                    if (audio.paused || !audio.duration) return;
+
+                    const percent = Math.floor((audio.currentTime / audio.duration) * 100);
+
+                    // Проверяем, прошли ли мы новый порог
+                    for (let threshold of THRESHOLDS) {
+                        if (percent >= threshold && !reported.has(threshold)) {
+                            reportProgress(threshold);
+                        }
+                    }
+
+                    lastKnownPercent = percent;
+                });
+
+                // Дослушал до конца
+                audio.addEventListener('ended', () => {
+                    reportProgress(1, true);
+                    audio.dataset.listened = "true";
+                });
+
+                // На всякий случай — если человек ушёл со страницы
+                window.addEventListener('beforeunload', () => {
+                    if (lastKnownPercent >= 10 && !reported.has(100)) {
+                        // sendBeacon — надёжнее fetch при выгрузке страницы
+                        navigator.sendBeacon(
+                            "{{ route('music.track.listen_progress') }}",
+                            JSON.stringify({
+                                track_id: trackId,
+                                percent: lastKnownPercent,
+                                current_time: Math.round(audio.currentTime),
+                                duration: Math.round(audio.duration || 0),
+                                partial: true,
+                                timestamp: new Date().toISOString()
+                            })
+                        );
+                    }
+                });
+
+                // Можно добавить отправку при паузе после долгого прослушивания (опционально)
+                // audio.addEventListener('pause', () => { ... });
+            });
+        });
+    </script>
 @endsection

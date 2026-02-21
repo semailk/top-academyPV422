@@ -102,4 +102,14 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->role->slug === 'admin';
+    }
+
+    public function isUser(): bool
+    {
+        return $this->role->slug === 'user';
+    }
 }
