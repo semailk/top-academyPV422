@@ -2,7 +2,8 @@
 
 namespace App\Models\Providers;
 
-use Illuminate\Pagination\Paginator;
+use App\Models\Music;
+use App\Observers\MusicObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Music::observe(MusicObserver::class);
 //        Paginator::useBootstrap();
     }
 }

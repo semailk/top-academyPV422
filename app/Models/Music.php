@@ -36,8 +36,7 @@ class Music extends Model
     ];
 
     protected $casts = [
-        'artists' => 'array',
-        'genre' => MusicGenre::class
+        'artists' => 'array'
     ];
 
     public function users(): BelongsToMany
@@ -48,6 +47,13 @@ class Music extends Model
     public function isFavoritedBy(?User $user): bool
     {
         if (!$user) return false;
-        return $this->favoritedBy()->where('user_id', $user->id)->exists();
+        return $this->users()->where('user_id', $user->id)->exists();
+    }
+
+    public function setArtistsAttribute(mixed $artists): void
+    {
+        if (is_string($artists)) {
+            $this->attributes['artists'] = json_encode(explode(',', $artists));
+        }
     }
 }

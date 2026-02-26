@@ -42,7 +42,7 @@
         <div class="flex justify-between items-center h-16">
 
             <!-- Logo / Brand -->
-            <a href="{{ route('music.index') }}" class="flex items-center gap-3 font-bold text-xl text-indigo-600 dark:text-indigo-400">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 font-bold text-xl text-indigo-600 dark:text-indigo-400">
                 <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
@@ -51,14 +51,12 @@
 
             <!-- Навигация (можно расширить) -->
             <nav class="hidden md:flex items-center gap-8">
+                @if(auth()->user()->isAdmin())
                 <a href="{{ route('users.index') }}"
                    class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition">
                     Пользователи
                 </a>
-                <a href="#"
-                   class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition">
-                    Заказы
-                </a>
+                @endif
                 <a href="#"
                    class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition">
                     Настройки
