@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\GenreController;
 use App\Http\Controllers\MusicController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Middleware\CheckStatusForAdminMiddleware;
@@ -24,6 +25,16 @@ Route::middleware('auth')->group(function(){
         Route::post('', [MusicController::class, 'store'])->name('store');
         Route::post('save/favorite/{music}', [MusicController::class, 'saveFavorite'])->name('save.favorite');
         Route::post('track/listen-progress', [MusicController::class, 'trackListenProgress'])->name('track.listen_progress');
+    });
+
+    // GENRE CONTROLLER
+    Route::prefix('genres')->name('genres.')->group(function () {
+       Route::get('', [GenreController::class, 'index'])->name('index');
+       Route::get('create', [GenreController::class, 'create'])->name('create');
+       Route::get('{genre}/edit', [GenreController::class, 'edit'])->name('edit');
+       Route::patch('{genre}', [GenreController::class, 'update'])->name('update');
+       Route::delete('{genre}', [GenreController::class, 'destroy'])->name('destroy');
+       Route::post('{id}/restore', [GenreController::class, 'restore'])->name('restore');
     });
 
     // USER CONTROLLER

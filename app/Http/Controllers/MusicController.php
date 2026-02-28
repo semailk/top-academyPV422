@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Comment;
 use App\Models\Music;
 use App\Services\CacheService;
 use App\Services\MusicService;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class MusicController extends Controller
@@ -60,8 +62,13 @@ class MusicController extends Controller
 
     public function show(Music $music): View
     {
+        $comments = $music->comments()->with(['user.avatar'])->paginate(10);
         return view('music.show', [
-            'track' => $this->cacheService->singleCache('music_' . $music->id, $music),
+            'track' => $this->cacheService->singleCache(
+                'music_' . $music->id,
+                $music
+            ),
+        'comments' => $comments
         ]);
     }
 

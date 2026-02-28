@@ -143,4 +143,116 @@
         </div>
     </div>
 
+    <!-- Комментарии -->
+    <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+            <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+            </svg>
+            Комментарии
+            <span class="text-lg font-normal text-gray-500 dark:text-gray-400">
+            ({{ $comments->total() }})
+        </span>
+        </h2>
+
+        <!-- Форма добавления комментария (если авторизован) -->
+        @auth
+{{--            <form action="{{ route('music.comment.store', $track->id) }}" method="POST" class="mb-10">--}}
+            <form action="#" method="POST" class="mb-10">
+                @csrf
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0">
+                        @if(auth()->user()->avatar)
+                            <img src="{{ asset(auth()->user()->avatar) }}" alt="avatar" class="w-10 h-10 rounded-full object-cover ring-2 ring-indigo-500/30">
+                        @else
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium">
+                                {{ substr(auth()->user()->name ?? '', 0, 1) }}
+                            </div>
+                        @endif
+                    </div>
+                    <div class="flex-1">
+                <textarea
+                    name="comment"
+                    rows="3"
+                    placeholder="Что вы думаете об этом треке?"
+                    class="w-full px-4 py-3 rounded-xl bg-gray-100/70 dark:bg-gray-900/70 border border-gray-300 dark:border-gray-600 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all resize-none"
+                    required
+                ></textarea>
+                        <div class="mt-3 flex justify-end">
+                            <button type="submit"
+                                    class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-colors shadow-sm flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                                Отправить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                @error('comment')
+                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            </form>
+        @endauth
+
+        @guest
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50/50 dark:bg-gray-900/30 rounded-xl mb-8">
+                Чтобы оставить комментарий — <a href="{{ route('login') }}" class="text-indigo-600 dark:text-indigo-400 hover:underline">войдите</a>
+            </div>
+        @endguest
+
+        <!-- Список комментариев -->
+        @if($comments->isNotEmpty())
+            <div class="space-y-6">
+                @foreach($comments->sortByDesc('id') as $comment) <!-- или ->latest() если есть timestamps -->
+                <div class="flex gap-4 group">
+                    <div class="flex-shrink-0">
+                        @if($comment->user->avatar ?? false)
+                            <img src="{{ asset($comment->user->avatar) }}" alt="{{ $comment->user->name }}" class="w-10 h-10 rounded-full object-cover ring-1 ring-gray-200 dark:ring-gray-700">
+                        @else
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-600 to-gray-800 flex items-center justify-center text-gray-300 font-medium">
+                                {{ substr($comment->user->name ?? 'А', 0, 1) }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="flex-1">
+                        <div class="bg-gray-50 dark:bg-gray-800/70 rounded-xl px-5 py-4 shadow-sm border border-gray-200/60 dark:border-gray-700/50 transition-all group-hover:border-indigo-500/30">
+
+                            <div class="flex items-baseline justify-between mb-1.5 flex-wrap gap-2">
+                                <span class="font-medium text-gray-900 dark:text-gray-200">
+                                    {{ $comment->user->name ?? 'Пользователь' }}
+                                </span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $comment->created_at?->diffForHumans() ?? '???' }}
+                                </span>
+                            </div>
+
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                                {{ $comment->comment }}
+                            </p>
+
+                            <!-- Можно добавить кнопки лайк/ответить/удалить позже -->
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        @else
+            <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+                Пока никто не оставил комментарий. Будьте первым!
+            </div>
+        @endif
+        {{ $comments->links() }}
+
+    </div>
+
+    <!-- Нижняя информация -->
+    <div class="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">
+        Добавлено: {{ $track->created_at->diffForHumans() }}
+        • ID: {{ $track->id }}
+    </div>
+
+
 @endsection
